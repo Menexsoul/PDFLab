@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 interface FileUploaderProps {
   onFileSelect: (file: File) => void;
@@ -6,8 +6,29 @@ interface FileUploaderProps {
 
 export function FileUploader({ onFileSelect }: FileUploaderProps) {
   // Fonction à appeler quand l'input change
+  const [isDragging, setIsDragging] = useState(false);
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
+    if (files && files.length > 0) {
+      onFileSelect(files[0]);
+    }
+  };
+
+  // 2. Gestion du survol
+  const handleDragOver = (event: React.DragEvent<HTMLLabelElement>) => {
+    event.preventDefault(); // Très important !
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (event: React.DragEvent<HTMLLabelElement>) => {
+    event.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (event: React.DragEvent<HTMLLabelElement>) => {
+    event.preventDefault();
+    setIsDragging(false);
+    const files = event.dataTransfer.files;
     if (files && files.length > 0) {
       onFileSelect(files[0]);
     }
@@ -17,7 +38,12 @@ export function FileUploader({ onFileSelect }: FileUploaderProps) {
     <div className="flex w-full max-w-xl flex-col items-center justify-center">
       <label
         htmlFor="pdf-upload"
-        className="flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-white transition-colors hover:bg-gray-50"
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={`flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors ${
+          isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 bg-white hover:bg-gray-50'
+        }`}
       >
         <div className="flex flex-col items-center justify-center pb-6 pt-5">
           {/* Une petite icône SVG pour rendre l'UI plus professionnelle */}
