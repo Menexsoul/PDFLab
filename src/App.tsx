@@ -1,8 +1,14 @@
 import { FileUploader } from './components/FileUploader';
+import { loadPdfDocument } from './lib/pdf/pdf.service';
 
 function App() {
-  const handlePdfSelect = (file: File) => {
-    console.log('Fichier sélectionné :', file.name, file.size);
+  const handlePdfSelect = async (file: File) => {
+    try {
+      const pdfDoc = await loadPdfDocument(file);
+      console.log('Succès ! Ce PDF contient', pdfDoc.numPages, 'pages.');
+    } catch (error) {
+      console.error('Erreur lors de la lecture du PDF :', error);
+    }
   };
 
   return (
