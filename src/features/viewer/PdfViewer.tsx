@@ -4,6 +4,7 @@ import { mergePdfs, removePageFromPdf } from '../../lib/pdf/modifier.service';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { PdfPage } from './PdfPage';
 import { Toolbar } from '../../components/Toolbar';
+import { rotatePageInPdf } from '../../lib/pdf/modifier.service';
 
 interface PdfViewerProps {
   file: File;
@@ -65,6 +66,15 @@ export function PdfViewer({ file, onFileUpdate }: PdfViewerProps) {
     }
   };
 
+  const handleRotatePage = async (pageNumber: number) => {
+    try {
+      const newFile = await rotatePageInPdf(file, pageNumber - 1);
+      onFileUpdate(newFile);
+    } catch (error) {
+      console.error('Erreur lors de la rotation :', error);
+    }
+  };
+
   const handleMergePdf = async (fileToAppend: File) => {
     try {
       const mergedFile = await mergePdfs(file, fileToAppend);
@@ -122,6 +132,7 @@ export function PdfViewer({ file, onFileUpdate }: PdfViewerProps) {
                 pageNumber={pageNumber}
                 scale={scale}
                 onDelete={() => handleDeletePage(pageNumber)}
+                onRotate={() => handleRotatePage(pageNumber)}
               />
             </div>
           );

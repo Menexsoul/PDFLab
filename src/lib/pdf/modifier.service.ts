@@ -1,4 +1,4 @@
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, degrees } from 'pdf-lib';
 
 /**
  * Supprime une page d'un fichier PDF et retourne le nouveau fichier.
@@ -49,6 +49,24 @@ export async function mergePdfs(baseFile: File, fileToAppend: File): Promise<Fil
   const newFileName = baseFile.name.replace('.pdf', '-fusionne.pdf');
 
   return new File([pdfBytes as BlobPart], newFileName, {
+    type: 'application/pdf',
+  });
+}
+
+export async function rotatePageInPdf(originalFile: File, pageIndex: number): Promise<File> {
+  const arrayBuffer = await originalFile.arrayBuffer();
+  const pdfDoc = await PDFDocument.load(arrayBuffer);
+
+  // Récupérer la page spécifique
+  const page = pdfDoc.getPage(pageIndex);
+
+  // Lire la rotation actuelle et ajouter 90 degrés
+  const currentRotation = page.getRotation().angle;
+  page.setRotation(degrees(currentRotation + 90));
+
+  const pdfBytes = await pdfDoc.save();
+  // Pas besoin de changer le nom à chaque fois ici, on garde l'original
+  return new File([pdfBytes as BlobPart], originalFile.name, {
     type: 'application/pdf',
   });
 }
