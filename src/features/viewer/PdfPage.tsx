@@ -9,6 +9,7 @@ interface PdfPageProps {
   onRotate: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
+  onExtract: () => void;
 }
 
 export function PdfPage({
@@ -19,6 +20,7 @@ export function PdfPage({
   onRotate,
   onMoveUp,
   onMoveDown,
+  onExtract,
 }: PdfPageProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isRendering, setIsRendering] = useState(true);
@@ -84,6 +86,19 @@ export function PdfPage({
           </span>
           <span className="sr-only">Télécharger</span>
         </button>
+        {!isRendering && (
+          <button
+            type="button"
+            onClick={onExtract}
+            aria-label={`Extraire la page ${pageNumber} en PDF`}
+            className="rounded bg-teal-600 px-3 py-2 text-sm text-white shadow-md transition-colors hover:bg-teal-700"
+          >
+            <span aria-hidden="true" className="font-bold">
+              ↗
+            </span>
+            <span className="sr-only">Extraire en PDF</span>
+          </button>
+        )}
         {!isFirstPage && !isRendering && (
           <button
             type="button"

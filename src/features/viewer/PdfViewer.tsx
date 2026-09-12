@@ -6,6 +6,7 @@ import { PdfPage } from './PdfPage';
 import { Toolbar } from '../../components/Toolbar';
 import { rotatePageInPdf } from '../../lib/pdf/modifier.service';
 import { movePageInPdf } from '../../lib/pdf/modifier.service';
+import { extractPageAsPdf } from '../../lib/pdf/modifier.service';
 
 interface PdfViewerProps {
   file: File;
@@ -126,6 +127,25 @@ export function PdfViewer({ file, onFileUpdate, onClose }: PdfViewerProps) {
     URL.revokeObjectURL(url);
   };
 
+  const handleExtractPage = async (pageNumber: number) => {
+    try {
+      // On récupère le nouveau fichier d'une page
+      const extractedFile = await extractPageAsPdf(file, pageNumber - 1);
+
+      // On déclenche son téléchargement direct
+      const url = URL.createObjectURL(extractedFile);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = extractedFile.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Erreur lors de l'extraction :", error);
+    }
+  };
+
   if (!pdfDocument) {
     return <div className="flex min-h-screen items-center justify-center">Chargement...</div>;
   }
@@ -160,6 +180,7 @@ export function PdfViewer({ file, onFileUpdate, onClose }: PdfViewerProps) {
                 onRotate={() => handleRotatePage(pageNumber)}
                 onMoveUp={() => handleMoveUp(pageNumber)}
                 onMoveDown={() => handleMoveDown(pageNumber)}
+                onExtract={() => handleExtractPage(pageNumber)}
               />
             </div>
           );

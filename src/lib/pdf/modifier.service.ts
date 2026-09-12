@@ -93,3 +93,27 @@ export async function movePageInPdf(
     type: 'application/pdf',
   });
 }
+
+export async function extractPageAsPdf(originalFile: File, pageIndex: number): Promise<File> {
+  const arrayBuffer = await originalFile.arrayBuffer();
+  const sourceDoc = await PDFDocument.load(arrayBuffer);
+
+  // 1. On crée un document PDF totalement vide
+  const newPdfDoc = await PDFDocument.create();
+
+  // 2. On copie la page voulue depuis le document source
+  const [copiedPage] = await newPdfDoc.copyPages(sourceDoc, [pageIndex]);
+
+  // 3. On l'ajoute au nouveau document
+  newPdfDoc.addPage(copiedPage);
+
+  const pdfBytes = await newPdfDoc.save();
+
+  // 4. On crée un nom de fichier clair (ex: mon-document-page-2.pdf)
+  const baseName = originalFile.name.replace(/\.[^/.]+$/, ''); // Retire l'extension .pdf
+  const newFileName = `${baseName}-page-${pageIndex + 1}.pdf`;
+
+  return new File([pdfBytes as BlobPart], newFileName, {
+    type: 'application/pdf',
+  });
+}
