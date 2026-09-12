@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 
 interface PdfPageProps {
@@ -9,9 +9,12 @@ interface PdfPageProps {
 
 export function PdfPage({ pdfDocument, pageNumber, scale }: PdfPageProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isRendering, setIsRendering] = useState(true);
 
   useEffect(() => {
     const renderPage = async () => {
+      setIsRendering(true);
+
       if (!canvasRef.current) return;
       const canvas = canvasRef.current;
       const context = canvas.getContext('2d');
@@ -35,11 +38,22 @@ export function PdfPage({ pdfDocument, pageNumber, scale }: PdfPageProps) {
         await page.render(renderContext).promise;
       } catch (error) {
         console.error('Erreur de rendu page :', error);
+      } finally {
+        setIsRendering(false);
       }
     };
 
     renderPage();
   }, [pdfDocument, pageNumber, scale]);
 
-  return <canvas ref={canvasRef} className="mb-4 bg-white shadow-md mx-auto" />;
+  return (
+    <div className="relative mb-4 mx-auto bg-white shadow-md min-h-[800px] w-full flex items-center justify-center">
+      {isRendering && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-50/50">
+          <span className="font-medium text-gray-500 animate-pulse">Chargement...</span>
+        </div>
+      )}
+      <canvas ref={canvasRef} aria-busy={isRendering} className="block" />
+    </div>
+  );
 }
