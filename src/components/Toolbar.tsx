@@ -8,6 +8,7 @@ interface ToolbarProps {
   onZoomOut: () => void;
   onFitWidth: () => void;
   onMerge: (file: File) => void;
+  onDownloadPdf: () => void;
 }
 
 export function Toolbar({
@@ -20,6 +21,7 @@ export function Toolbar({
   onZoomOut,
   onFitWidth,
   onMerge,
+  onDownloadPdf,
 }: ToolbarProps) {
   return (
     <div className="sticky top-0 z-10 flex items-center justify-between bg-white px-4 py-3 shadow-md w-full">
@@ -64,6 +66,13 @@ export function Toolbar({
             }}
           />
         </label>
+        {/* Nouveau bouton de sauvegarde du PDF complet */}
+        <button
+          onClick={onDownloadPdf}
+          className="mr-4 rounded bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-md transition-colors hover:bg-indigo-700"
+        >
+          Sauvegarder le PDF
+        </button>
         <button
           onClick={onZoomOut}
           aria-label="Réduire le zoom"

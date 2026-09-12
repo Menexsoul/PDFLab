@@ -74,6 +74,24 @@ export function PdfViewer({ file, onFileUpdate }: PdfViewerProps) {
     }
   };
 
+  const handleDownloadPdf = () => {
+    // 1. Crée une URL temporaire pointant vers le fichier en mémoire
+    const url = URL.createObjectURL(file);
+
+    // 2. Crée le lien de téléchargement
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = file.name; // On réutilise le nom du fichier (qui a été mis à jour par nos services)
+
+    // 3. Déclenche le clic
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // 4. Nettoie la mémoire (très important pour les gros fichiers)
+    URL.revokeObjectURL(url);
+  };
+
   if (!pdfDocument) {
     return <div className="flex min-h-screen items-center justify-center">Chargement...</div>;
   }
@@ -90,6 +108,7 @@ export function PdfViewer({ file, onFileUpdate }: PdfViewerProps) {
         onZoomOut={() => setScale((currentScale) => Math.max(0.5, currentScale - 0.25))}
         onFitWidth={handleFitWidth}
         onMerge={handleMergePdf}
+        onDownloadPdf={handleDownloadPdf}
       />
 
       <div ref={containerRef} className="flex-1 overflow-y-auto p-8">
