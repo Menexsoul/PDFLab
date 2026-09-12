@@ -5,6 +5,7 @@ import { PDFDocument } from 'pdf-lib';
  * @param originalFile Le fichier PDF source
  * @param pageIndex L'index de la page à supprimer (commence à 0 !)
  */
+
 export async function removePageFromPdf(originalFile: File, pageIndex: number): Promise<File> {
   // 1. Lire le fichier sous forme de buffer binaire
   const arrayBuffer = await originalFile.arrayBuffer();
@@ -21,6 +22,31 @@ export async function removePageFromPdf(originalFile: File, pageIndex: number): 
   // 5. Reconstruire un objet File valide pour le navigateur
   // On utilise le même nom de fichier en ajoutant un suffixe pour le différencier
   const newFileName = originalFile.name.replace('.pdf', '-modifie.pdf');
+
+  return new File([pdfBytes as BlobPart], newFileName, {
+    type: 'application/pdf',
+  });
+}
+
+export async function mergePdfs(baseFile: File, fileToAppend: File): Promise<File> {
+  const baseBuffer = await baseFile.arrayBuffer();
+  const appendBuffer = await fileToAppend.arrayBuffer();
+
+  // On charge les deux documents
+  const baseDoc = await PDFDocument.load(baseBuffer);
+  const appendDoc = await PDFDocument.load(appendBuffer);
+
+  // On copie toutes les pages du second document
+  // getPageIndices() renvoie un tableau [0, 1, 2, ...] avec tous les index
+  const copiedPages = await baseDoc.copyPages(appendDoc, appendDoc.getPageIndices());
+
+  // On les ajoute une par une à la fin du document de base
+  copiedPages.forEach((page) => {
+    baseDoc.addPage(page);
+  });
+
+  const pdfBytes = await baseDoc.save();
+  const newFileName = baseFile.name.replace('.pdf', '-fusionne.pdf');
 
   return new File([pdfBytes as BlobPart], newFileName, {
     type: 'application/pdf',

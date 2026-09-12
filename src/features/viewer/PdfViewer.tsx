@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { loadPdfDocument } from '../../lib/pdf/pdf.service';
-import { removePageFromPdf } from '../../lib/pdf/modifier.service';
+import { mergePdfs, removePageFromPdf } from '../../lib/pdf/modifier.service';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { PdfPage } from './PdfPage';
 import { Toolbar } from '../../components/Toolbar';
@@ -65,6 +65,15 @@ export function PdfViewer({ file, onFileUpdate }: PdfViewerProps) {
     }
   };
 
+  const handleMergePdf = async (fileToAppend: File) => {
+    try {
+      const mergedFile = await mergePdfs(file, fileToAppend);
+      onFileUpdate(mergedFile); // Met à jour l'interface avec le nouveau fichier
+    } catch (error) {
+      console.error('Erreur lors de la fusion :', error);
+    }
+  };
+
   if (!pdfDocument) {
     return <div className="flex min-h-screen items-center justify-center">Chargement...</div>;
   }
@@ -80,6 +89,7 @@ export function PdfViewer({ file, onFileUpdate }: PdfViewerProps) {
         onZoomIn={() => setScale((currentScale) => currentScale + 0.25)}
         onZoomOut={() => setScale((currentScale) => Math.max(0.5, currentScale - 0.25))}
         onFitWidth={handleFitWidth}
+        onMerge={handleMergePdf}
       />
 
       <div ref={containerRef} className="flex-1 overflow-y-auto p-8">

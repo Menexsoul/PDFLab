@@ -7,6 +7,7 @@ interface ToolbarProps {
   onZoomIn: () => void;
   onZoomOut: () => void;
   onFitWidth: () => void;
+  onMerge: (file: File) => void;
 }
 
 export function Toolbar({
@@ -18,6 +19,7 @@ export function Toolbar({
   onZoomIn,
   onZoomOut,
   onFitWidth,
+  onMerge,
 }: ToolbarProps) {
   return (
     <div className="sticky top-0 z-10 flex items-center justify-between bg-white px-4 py-3 shadow-md w-full">
@@ -46,6 +48,22 @@ export function Toolbar({
       </div>
 
       <div className="flex w-24 items-center justify-end gap-2">
+        {/* Bouton d'ajout de PDF */}
+        <label className="mr-4 cursor-pointer rounded bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700">
+          + Ajouter un PDF
+          <input
+            type="file"
+            accept=".pdf,application/pdf"
+            className="hidden"
+            onChange={(e) => {
+              if (e.target.files && e.target.files.length > 0) {
+                onMerge(e.target.files[0]);
+                // On réinitialise la valeur pour pouvoir rajouter le même fichier si besoin
+                e.target.value = '';
+              }
+            }}
+          />
+        </label>
         <button
           onClick={onZoomOut}
           aria-label="Réduire le zoom"
