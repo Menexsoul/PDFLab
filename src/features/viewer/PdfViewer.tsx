@@ -14,6 +14,7 @@ export function PdfViewer({ file }: PdfViewerProps) {
 
   // 1. Nouvel état pour suivre la page actuelle
   const [currentPage, setCurrentPage] = useState(1);
+  const [scale, setScale] = useState(1.5);
 
   useEffect(() => {
     const initPdf = async () => {
@@ -51,8 +52,11 @@ export function PdfViewer({ file }: PdfViewerProps) {
       <Toolbar
         currentPage={currentPage}
         numPages={numPages}
+        scale={scale}
         onPrev={() => goToPage(currentPage - 1)}
         onNext={() => goToPage(currentPage + 1)}
+        onZoomIn={() => setScale((currentScale) => currentScale + 0.25)}
+        onZoomOut={() => setScale((currentScale) => Math.max(0.5, currentScale - 0.25))}
       />
 
       <div className="flex-1 overflow-y-auto p-8">
@@ -61,7 +65,7 @@ export function PdfViewer({ file }: PdfViewerProps) {
           return (
             // L'ID est crucial ici pour que document.getElementById() fonctionne
             <div key={pageNumber} id={`page-${pageNumber}`} className="mb-6 flex justify-center">
-              <PdfPage pdfDocument={pdfDocument} pageNumber={pageNumber} />
+              <PdfPage pdfDocument={pdfDocument} pageNumber={pageNumber} scale={scale} />
             </div>
           );
         })}

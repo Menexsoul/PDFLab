@@ -1,11 +1,22 @@
 interface ToolbarProps {
   currentPage: number;
   numPages: number;
+  scale: number;
   onNext: () => void;
   onPrev: () => void;
+  onZoomIn: () => void;
+  onZoomOut: () => void;
 }
 
-export function Toolbar({ currentPage, numPages, onNext, onPrev }: ToolbarProps) {
+export function Toolbar({
+  currentPage,
+  numPages,
+  scale,
+  onNext,
+  onPrev,
+  onZoomIn,
+  onZoomOut,
+}: ToolbarProps) {
   return (
     <div className="sticky top-0 z-10 flex items-center justify-between bg-white px-4 py-3 shadow-md w-full">
       <div className="flex gap-2">
@@ -32,8 +43,23 @@ export function Toolbar({ currentPage, numPages, onNext, onPrev }: ToolbarProps)
         Page {currentPage} sur {numPages}
       </div>
 
-      {/* On garde un espace vide à droite pour les futurs boutons (ex: Zoom) */}
-      <div className="w-24"></div>
+      <div className="flex w-24 items-center justify-end gap-2">
+        <button
+          onClick={onZoomOut}
+          aria-label="Réduire le zoom"
+          className="rounded bg-gray-200 px-3 py-1 font-bold text-gray-700 transition-colors hover:bg-gray-300"
+        >
+          -
+        </button>
+        <span>{Math.round(scale * 100)}%</span>
+        <button
+          onClick={onZoomIn}
+          aria-label="Augmenter le zoom"
+          className="rounded bg-gray-200 px-3 py-1 font-bold text-gray-700 transition-colors hover:bg-gray-300"
+        >
+          +
+        </button>
+      </div>
     </div>
   );
 }
