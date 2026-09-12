@@ -5,11 +5,27 @@ interface FileUploaderProps {
 }
 
 export function FileUploader({ onFileSelect }: FileUploaderProps) {
-  // Fonction à appeler quand l'input change
   const [isDragging, setIsDragging] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const validateFile = (file: File): boolean => {
+    if (file.type !== 'application/pdf') {
+      setError('Le fichier doit être au format PDF.');
+      return false;
+    }
+
+    if (file.size >= 50 * 1024 * 1024) {
+      setError('La taille du fichier doit être inférieure à 50 Mo.');
+      return false;
+    }
+
+    setError(null);
+    return true;
+  };
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (files && files.length > 0) {
+    if (files && files.length > 0 && validateFile(files[0])) {
       onFileSelect(files[0]);
     }
   };
@@ -29,7 +45,7 @@ export function FileUploader({ onFileSelect }: FileUploaderProps) {
     event.preventDefault();
     setIsDragging(false);
     const files = event.dataTransfer.files;
-    if (files && files.length > 0) {
+    if (files && files.length > 0 && validateFile(files[0])) {
       onFileSelect(files[0]);
     }
   };
@@ -76,6 +92,7 @@ export function FileUploader({ onFileSelect }: FileUploaderProps) {
           onChange={handleFileChange}
         />
       </label>
+      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
     </div>
   );
 }
