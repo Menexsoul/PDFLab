@@ -5,13 +5,15 @@ import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { PdfPage } from './PdfPage';
 import { Toolbar } from '../../components/Toolbar';
 import { rotatePageInPdf } from '../../lib/pdf/modifier.service';
+import { movePageInPdf } from '../../lib/pdf/modifier.service';
 
 interface PdfViewerProps {
   file: File;
   onFileUpdate: (file: File | null) => void;
+  onClose: () => void;
 }
 
-export function PdfViewer({ file, onFileUpdate }: PdfViewerProps) {
+export function PdfViewer({ file, onFileUpdate, onClose }: PdfViewerProps) {
   const [pdfDocument, setPdfDocument] = useState<PDFDocumentProxy | null>(null);
   const [numPages, setNumPages] = useState(0);
 
@@ -75,6 +77,28 @@ export function PdfViewer({ file, onFileUpdate }: PdfViewerProps) {
     }
   };
 
+  const handleMoveUp = async (pageNumber: number) => {
+    if (pageNumber <= 1) return;
+    try {
+      // Pour monter : on déplace l'index actuel (pageNumber - 1) vers l'index précédent (pageNumber - 2)
+      const newFile = await movePageInPdf(file, pageNumber - 1, pageNumber - 2);
+      onFileUpdate(newFile);
+    } catch (error) {
+      console.error('Erreur lors du déplacement (haut) :', error);
+    }
+  };
+
+  const handleMoveDown = async (pageNumber: number) => {
+    if (pageNumber >= numPages) return;
+    try {
+      // Pour descendre : on déplace vers l'index suivant (pageNumber)
+      const newFile = await movePageInPdf(file, pageNumber - 1, pageNumber);
+      onFileUpdate(newFile);
+    } catch (error) {
+      console.error('Erreur lors du déplacement (bas) :', error);
+    }
+  };
+
   const handleMergePdf = async (fileToAppend: File) => {
     try {
       const mergedFile = await mergePdfs(file, fileToAppend);
@@ -119,6 +143,7 @@ export function PdfViewer({ file, onFileUpdate }: PdfViewerProps) {
         onFitWidth={handleFitWidth}
         onMerge={handleMergePdf}
         onDownloadPdf={handleDownloadPdf}
+        onClose={onClose}
       />
 
       <div ref={containerRef} className="flex-1 overflow-y-auto p-8">
@@ -133,6 +158,8 @@ export function PdfViewer({ file, onFileUpdate }: PdfViewerProps) {
                 scale={scale}
                 onDelete={() => handleDeletePage(pageNumber)}
                 onRotate={() => handleRotatePage(pageNumber)}
+                onMoveUp={() => handleMoveUp(pageNumber)}
+                onMoveDown={() => handleMoveDown(pageNumber)}
               />
             </div>
           );

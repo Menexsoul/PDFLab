@@ -70,3 +70,26 @@ export async function rotatePageInPdf(originalFile: File, pageIndex: number): Pr
     type: 'application/pdf',
   });
 }
+
+export async function movePageInPdf(
+  originalFile: File,
+  fromIndex: number,
+  toIndex: number,
+): Promise<File> {
+  const arrayBuffer = await originalFile.arrayBuffer();
+  const pdfDoc = await PDFDocument.load(arrayBuffer);
+
+  // 1. On copie la page qu'on veut déplacer
+  const [copiedPage] = await pdfDoc.copyPages(pdfDoc, [fromIndex]);
+
+  // 2. On supprime l'originale
+  pdfDoc.removePage(fromIndex);
+
+  // 3. On l'insère à sa nouvelle place
+  pdfDoc.insertPage(toIndex, copiedPage);
+
+  const pdfBytes = await pdfDoc.save();
+  return new File([pdfBytes as BlobPart], originalFile.name, {
+    type: 'application/pdf',
+  });
+}

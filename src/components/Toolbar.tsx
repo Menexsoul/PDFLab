@@ -9,6 +9,7 @@ interface ToolbarProps {
   onFitWidth: () => void;
   onMerge: (file: File) => void;
   onDownloadPdf: () => void;
+  onClose: () => void;
 }
 
 export function Toolbar({
@@ -22,10 +23,18 @@ export function Toolbar({
   onFitWidth,
   onMerge,
   onDownloadPdf,
+  onClose,
 }: ToolbarProps) {
   return (
     <div className="sticky top-0 z-10 flex items-center justify-between bg-white px-4 py-3 shadow-md w-full">
       <div className="flex gap-2">
+        <button
+          onClick={onClose}
+          className="mr-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-100"
+        >
+          Fermer
+        </button>
+
         {/* Bouton Précédent (désactivé si on est à la page 1) */}
         <button
           onClick={onPrev}

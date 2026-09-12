@@ -7,11 +7,23 @@ interface PdfPageProps {
   scale: number;
   onDelete: () => void;
   onRotate: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
 }
 
-export function PdfPage({ pdfDocument, pageNumber, scale, onDelete, onRotate }: PdfPageProps) {
+export function PdfPage({
+  pdfDocument,
+  pageNumber,
+  scale,
+  onDelete,
+  onRotate,
+  onMoveUp,
+  onMoveDown,
+}: PdfPageProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isRendering, setIsRendering] = useState(true);
+  const isFirstPage = pageNumber === 1;
+  const isLastPage = pageNumber === pdfDocument.numPages;
 
   const handleDownloadImage = () => {
     if (!canvasRef.current) return;
@@ -72,6 +84,32 @@ export function PdfPage({ pdfDocument, pageNumber, scale, onDelete, onRotate }: 
           </span>
           <span className="sr-only">Télécharger</span>
         </button>
+        {!isFirstPage && !isRendering && (
+          <button
+            type="button"
+            onClick={onMoveUp}
+            aria-label={`Monter la page ${pageNumber}`}
+            className="rounded bg-purple-600 px-3 py-2 text-sm text-white shadow-md transition-colors hover:bg-purple-700"
+          >
+            <span aria-hidden="true" className="font-bold">
+              ↑
+            </span>
+            <span className="sr-only">Monter</span>
+          </button>
+        )}
+        {!isLastPage && !isRendering && (
+          <button
+            type="button"
+            onClick={onMoveDown}
+            aria-label={`Descendre la page ${pageNumber}`}
+            className="rounded bg-purple-600 px-3 py-2 text-sm text-white shadow-md transition-colors hover:bg-purple-700"
+          >
+            <span aria-hidden="true" className="font-bold">
+              ↓
+            </span>
+            <span className="sr-only">Descendre</span>
+          </button>
+        )}
         {!isRendering && (
           <button
             type="button"
