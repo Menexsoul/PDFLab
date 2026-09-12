@@ -50,6 +50,8 @@ export function FileUploader({ onFileSelect }: FileUploaderProps) {
     }
   };
 
+  const [file, setFile] = useState<File | null>(null);
+
   return (
     <div className="flex w-full max-w-xl flex-col items-center justify-center">
       <label

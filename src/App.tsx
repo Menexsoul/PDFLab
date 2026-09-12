@@ -1,19 +1,25 @@
+import { useState } from 'react';
 import { FileUploader } from './components/FileUploader';
-import { loadPdfDocument } from './lib/pdf/pdf.service';
+import { PdfViewer } from './features/viewer/PdfViewer';
 
 function App() {
-  const handlePdfSelect = async (file: File) => {
-    try {
-      const pdfDoc = await loadPdfDocument(file);
-      console.log('Succès ! Ce PDF contient', pdfDoc.numPages, 'pages.');
-    } catch (error) {
-      console.error('Erreur lors de la lecture du PDF :', error);
-    }
+  // L'état qui contient le fichier (null par défaut)
+  const [file, setFile] = useState<File | null>(null);
+
+  const handlePdfSelect = (selectedFile: File) => {
+    // Quand un fichier est validé par le FileUploader, on le stocke dans l'état
+    setFile(selectedFile);
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4 bg-gray-100">
-      <FileUploader onFileSelect={handlePdfSelect} />
+    <div className="min-h-screen bg-gray-100">
+      {!file ? (
+        <div className="flex min-h-screen items-center justify-center p-4">
+          <FileUploader onFileSelect={handlePdfSelect} />
+        </div>
+      ) : (
+        <PdfViewer file={file} />
+      )}
     </div>
   );
 }
