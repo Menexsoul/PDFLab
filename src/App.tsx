@@ -18,7 +18,7 @@ function App() {
           <FileUploader onFileSelect={handlePdfSelect} />
         </div>
       ) : (
-        <PdfViewer file={file} />
+        <PdfViewer file={file} onFileUpdate={setFile} />
       )}
     </div>
   );

@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { loadPdfDocument } from '../../lib/pdf/pdf.service';
+import { removePageFromPdf } from '../../lib/pdf/modifier.service';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { PdfPage } from './PdfPage';
 import { Toolbar } from '../../components/Toolbar';
 
 interface PdfViewerProps {
   file: File;
+  onFileUpdate: (file: File | null) => void;
 }
 
-export function PdfViewer({ file }: PdfViewerProps) {
+export function PdfViewer({ file, onFileUpdate }: PdfViewerProps) {
   const [pdfDocument, setPdfDocument] = useState<PDFDocumentProxy | null>(null);
   const [numPages, setNumPages] = useState(0);
 
@@ -54,6 +56,15 @@ export function PdfViewer({ file }: PdfViewerProps) {
     setScale(Math.max(0.5, availableWidth / viewport.width));
   };
 
+  const handleDeletePage = async (pageNumber: number) => {
+    try {
+      const updatedFile = await removePageFromPdf(file, pageNumber - 1);
+      onFileUpdate(updatedFile);
+    } catch (error) {
+      console.error('Erreur lors de la suppression de la page :', error);
+    }
+  };
+
   if (!pdfDocument) {
     return <div className="flex min-h-screen items-center justify-center">Chargement...</div>;
   }
@@ -77,7 +88,12 @@ export function PdfViewer({ file }: PdfViewerProps) {
           return (
             // L'ID est crucial ici pour que document.getElementById() fonctionne
             <div key={pageNumber} id={`page-${pageNumber}`} className="mb-6 flex justify-center">
-              <PdfPage pdfDocument={pdfDocument} pageNumber={pageNumber} scale={scale} />
+              <PdfPage
+                pdfDocument={pdfDocument}
+                pageNumber={pageNumber}
+                scale={scale}
+                onDelete={() => handleDeletePage(pageNumber)}
+              />
             </div>
           );
         })}
