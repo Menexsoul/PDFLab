@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { loadPdfDocument } from '../../lib/pdf/pdf.service';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { PdfPage } from './PdfPage';
@@ -15,6 +15,7 @@ export function PdfViewer({ file }: PdfViewerProps) {
   // 1. Nouvel état pour suivre la page actuelle
   const [currentPage, setCurrentPage] = useState(1);
   const [scale, setScale] = useState(1.5);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const initPdf = async () => {
@@ -43,6 +44,16 @@ export function PdfViewer({ file }: PdfViewerProps) {
     }
   };
 
+  const handleFitWidth = async () => {
+    if (!containerRef.current || !pdfDocument) return;
+
+    const page = await pdfDocument.getPage(1);
+    const viewport = page.getViewport({ scale: 1 });
+    const availableWidth = containerRef.current.clientWidth - 64;
+
+    setScale(Math.max(0.5, availableWidth / viewport.width));
+  };
+
   if (!pdfDocument) {
     return <div className="flex min-h-screen items-center justify-center">Chargement...</div>;
   }
@@ -57,9 +68,10 @@ export function PdfViewer({ file }: PdfViewerProps) {
         onNext={() => goToPage(currentPage + 1)}
         onZoomIn={() => setScale((currentScale) => currentScale + 0.25)}
         onZoomOut={() => setScale((currentScale) => Math.max(0.5, currentScale - 0.25))}
+        onFitWidth={handleFitWidth}
       />
 
-      <div className="flex-1 overflow-y-auto p-8">
+      <div ref={containerRef} className="flex-1 overflow-y-auto p-8">
         {Array.from({ length: numPages }, (_, index) => {
           const pageNumber = index + 1;
           return (

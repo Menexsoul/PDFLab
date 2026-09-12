@@ -6,6 +6,7 @@ interface ToolbarProps {
   onPrev: () => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
+  onFitWidth: () => void;
 }
 
 export function Toolbar({
@@ -16,6 +17,7 @@ export function Toolbar({
   onPrev,
   onZoomIn,
   onZoomOut,
+  onFitWidth,
 }: ToolbarProps) {
   return (
     <div className="sticky top-0 z-10 flex items-center justify-between bg-white px-4 py-3 shadow-md w-full">
@@ -52,6 +54,13 @@ export function Toolbar({
           -
         </button>
         <span>{Math.round(scale * 100)}%</span>
+        <button
+          onClick={onFitWidth}
+          aria-label="Ajuster à la largeur"
+          className="rounded bg-gray-200 px-2 py-1 font-bold text-gray-700 transition-colors hover:bg-gray-300"
+        >
+          [↔]
+        </button>
         <button
           onClick={onZoomIn}
           aria-label="Augmenter le zoom"
