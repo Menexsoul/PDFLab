@@ -7,6 +7,11 @@ import { Toolbar } from '../../components/Toolbar';
 import { rotatePageInPdf } from '../../lib/pdf/modifier.service';
 import { movePageInPdf } from '../../lib/pdf/modifier.service';
 import { extractPageAsPdf } from '../../lib/pdf/modifier.service';
+import { insertBlankPageAfter } from '../../lib/pdf/modifier.service';
+import { DndContext, closestCorners } from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { SortablePageWrapper } from './SortablePageWrapper';
 
 interface PdfViewerProps {
   file: File;
@@ -21,7 +26,16 @@ export function PdfViewer({ file, onFileUpdate, onClose }: PdfViewerProps) {
   // 1. Nouvel état pour suivre la page actuelle
   const [currentPage, setCurrentPage] = useState(1);
   const [scale, setScale] = useState(1.5);
+  // Nouveau state pour dnd-kit
+  const [pageIds, setPageIds] = useState<string[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // À chaque mise à jour du document, on recrée les IDs dans l'ordre naturel.
+  useEffect(() => {
+    if (numPages > 0) {
+      setPageIds(Array.from({ length: numPages }, (_, i) => `page-${i + 1}`));
+    }
+  }, [numPages, pdfDocument]);
 
   useEffect(() => {
     const initPdf = async () => {
@@ -146,6 +160,37 @@ export function PdfViewer({ file, onFileUpdate, onClose }: PdfViewerProps) {
     }
   };
 
+  const handleInsertBlankPage = async (pageNumber: number) => {
+    try {
+      // On insère après la page actuelle (pageNumber - 1)
+      const newFile = await insertBlankPageAfter(file, pageNumber - 1);
+      onFileUpdate(newFile);
+    } catch (error) {
+      console.error("Erreur lors de l'insertion d'une page blanche :", error);
+    }
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    // Si on a lâché la page en dehors de la liste, ou sur sa position d'origine, on annule
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = pageIds.indexOf(active.id as string);
+    const newIndex = pageIds.indexOf(over.id as string);
+
+    // 1. Mise à jour immédiate de l'interface (Optimistic UI) pour une UX fluide
+    setPageIds((items) => arrayMove(items, oldIndex, newIndex));
+
+    try {
+      // 2. On effectue la vraie modification du PDF en arrière-plan avec la fonction codée au DEV-023
+      const newFile = await movePageInPdf(file, oldIndex, newIndex);
+      onFileUpdate(newFile);
+    } catch (error) {
+      console.error('Erreur lors du glisser-déposer :', error);
+    }
+  };
+
   if (!pdfDocument) {
     return <div className="flex min-h-screen items-center justify-center">Chargement...</div>;
   }
@@ -166,25 +211,30 @@ export function PdfViewer({ file, onFileUpdate, onClose }: PdfViewerProps) {
         onClose={onClose}
       />
 
-      <div ref={containerRef} className="flex-1 overflow-y-auto p-8">
-        {Array.from({ length: numPages }, (_, index) => {
-          const pageNumber = index + 1;
-          return (
-            // L'ID est crucial ici pour que document.getElementById() fonctionne
-            <div key={pageNumber} id={`page-${pageNumber}`} className="mb-6 flex justify-center">
-              <PdfPage
-                pdfDocument={pdfDocument}
-                pageNumber={pageNumber}
-                scale={scale}
-                onDelete={() => handleDeletePage(pageNumber)}
-                onRotate={() => handleRotatePage(pageNumber)}
-                onMoveUp={() => handleMoveUp(pageNumber)}
-                onMoveDown={() => handleMoveDown(pageNumber)}
-                onExtract={() => handleExtractPage(pageNumber)}
-              />
-            </div>
-          );
-        })}
+      <div className="flex-1 overflow-y-auto p-8" ref={containerRef}>
+        <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
+          <SortableContext items={pageIds} strategy={verticalListSortingStrategy}>
+            {pageIds.map((id) => {
+              const pageNumber = parseInt(id.replace('page-', ''), 10);
+
+              return (
+                <SortablePageWrapper key={id} id={id}>
+                  <PdfPage
+                    pdfDocument={pdfDocument}
+                    pageNumber={pageNumber}
+                    scale={scale}
+                    onDelete={() => handleDeletePage(pageNumber)}
+                    onRotate={() => handleRotatePage(pageNumber)}
+                    onMoveUp={() => handleMoveUp(pageNumber)}
+                    onMoveDown={() => handleMoveDown(pageNumber)}
+                    onExtract={() => handleExtractPage(pageNumber)}
+                    onInsertBlank={() => handleInsertBlankPage(pageNumber)}
+                  />
+                </SortablePageWrapper>
+              );
+            })}
+          </SortableContext>
+        </DndContext>
       </div>
     </div>
   );

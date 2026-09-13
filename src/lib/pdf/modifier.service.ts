@@ -117,3 +117,22 @@ export async function extractPageAsPdf(originalFile: File, pageIndex: number): P
     type: 'application/pdf',
   });
 }
+
+export async function insertBlankPageAfter(originalFile: File, pageIndex: number): Promise<File> {
+  const arrayBuffer = await originalFile.arrayBuffer();
+  const pdfDoc = await PDFDocument.load(arrayBuffer);
+
+  // 1. Récupérer la page actuelle pour connaître sa taille
+  const referencePage = pdfDoc.getPage(pageIndex);
+  const { width, height } = referencePage.getSize();
+
+  // 2. Insérer une nouvelle page à l'index suivant (pageIndex + 1)
+  // On lui passe un tableau [largeur, hauteur] pour imiter la page précédente
+  pdfDoc.insertPage(pageIndex + 1, [width, height]);
+
+  const pdfBytes = await pdfDoc.save();
+
+  return new File([pdfBytes as BlobPart], originalFile.name, {
+    type: 'application/pdf',
+  });
+}

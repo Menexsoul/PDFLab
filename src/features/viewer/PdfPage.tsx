@@ -10,6 +10,7 @@ interface PdfPageProps {
   onMoveUp: () => void;
   onMoveDown: () => void;
   onExtract: () => void;
+  onInsertBlank: () => void;
 }
 
 export function PdfPage({
@@ -21,6 +22,7 @@ export function PdfPage({
   onMoveUp,
   onMoveDown,
   onExtract,
+  onInsertBlank,
 }: PdfPageProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isRendering, setIsRendering] = useState(true);
@@ -110,6 +112,19 @@ export function PdfPage({
               ↑
             </span>
             <span className="sr-only">Monter</span>
+          </button>
+        )}
+        {!isRendering && (
+          <button
+            type="button"
+            onClick={onInsertBlank}
+            aria-label={`Insérer une page blanche après la page ${pageNumber}`}
+            className="rounded border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow-md transition-colors hover:bg-gray-50"
+          >
+            <span aria-hidden="true" className="font-bold">
+              +
+            </span>
+            <span className="sr-only">Insérer une page blanche</span>
           </button>
         )}
         {!isLastPage && !isRendering && (
