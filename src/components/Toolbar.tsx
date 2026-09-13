@@ -10,6 +10,9 @@ interface ToolbarProps {
   onMerge: (file: File) => void;
   onDownloadPdf: () => void;
   onClose: () => void;
+  isGridView: boolean;
+  onToggleView: () => void;
+  onAddWatermark: () => void;
 }
 
 export function Toolbar({
@@ -24,6 +27,9 @@ export function Toolbar({
   onMerge,
   onDownloadPdf,
   onClose,
+  isGridView,
+  onToggleView,
+  onAddWatermark,
 }: ToolbarProps) {
   return (
     <div className="sticky top-0 z-10 flex items-center justify-between bg-white px-4 py-3 shadow-md w-full">
@@ -51,6 +57,20 @@ export function Toolbar({
           className="rounded bg-blue-600 px-4 py-2 text-white disabled:bg-gray-300 transition-colors"
         >
           Suivant
+        </button>
+        <button
+          type="button"
+          onClick={onToggleView}
+          className="rounded bg-gray-200 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-300"
+        >
+          {isGridView ? 'Vue Lecture' : 'Vue Grille'}
+        </button>
+        <button
+          type="button"
+          onClick={onAddWatermark}
+          className="mr-4 rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
+        >
+          📝 Filigrane
         </button>
       </div>
 

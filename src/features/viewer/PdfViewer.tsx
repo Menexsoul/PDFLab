@@ -1,16 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
 import { loadPdfDocument } from '../../lib/pdf/pdf.service';
-import { mergePdfs, removePageFromPdf } from '../../lib/pdf/modifier.service';
+import {
+  mergePdfs,
+  removePageFromPdf,
+  rotatePageInPdf,
+  movePageInPdf,
+  extractPageAsPdf,
+  insertBlankPageAfter,
+  addWatermarkToPdf,
+} from '../../lib/pdf/modifier.service';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { PdfPage } from './PdfPage';
 import { Toolbar } from '../../components/Toolbar';
-import { rotatePageInPdf } from '../../lib/pdf/modifier.service';
-import { movePageInPdf } from '../../lib/pdf/modifier.service';
-import { extractPageAsPdf } from '../../lib/pdf/modifier.service';
-import { insertBlankPageAfter } from '../../lib/pdf/modifier.service';
 import { DndContext, closestCorners } from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { SortableContext, rectSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { SortablePageWrapper } from './SortablePageWrapper';
 
 interface PdfViewerProps {
@@ -28,6 +32,7 @@ export function PdfViewer({ file, onFileUpdate, onClose }: PdfViewerProps) {
   const [scale, setScale] = useState(1.5);
   // Nouveau state pour dnd-kit
   const [pageIds, setPageIds] = useState<string[]>([]);
+  const [isGridView, setIsGridView] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // À chaque mise à jour du document, on recrée les IDs dans l'ordre naturel.
@@ -191,6 +196,20 @@ export function PdfViewer({ file, onFileUpdate, onClose }: PdfViewerProps) {
     }
   };
 
+  const handleAddWatermark = async () => {
+    // On demande le texte à l'utilisateur via une boîte de dialogue native
+    const text = window.prompt('Entrez le texte du filigrane (ex: CONFIDENTIEL) :');
+
+    if (!text || text.trim() === '') return; // Si l'utilisateur annule ou ne tape rien
+
+    try {
+      const newFile = await addWatermarkToPdf(file, text.trim());
+      onFileUpdate(newFile);
+    } catch (error) {
+      console.error('Erreur lors de l’ajout du filigrane :', error);
+    }
+  };
+
   if (!pdfDocument) {
     return <div className="flex min-h-screen items-center justify-center">Chargement...</div>;
   }
@@ -208,12 +227,18 @@ export function PdfViewer({ file, onFileUpdate, onClose }: PdfViewerProps) {
         onFitWidth={handleFitWidth}
         onMerge={handleMergePdf}
         onDownloadPdf={handleDownloadPdf}
+        onAddWatermark={handleAddWatermark}
         onClose={onClose}
+        isGridView={isGridView}
+        onToggleView={() => setIsGridView((currentView) => !currentView)}
       />
 
-      <div className="flex-1 overflow-y-auto p-8" ref={containerRef}>
+      <div
+        className={`flex-1 overflow-y-auto p-8 ${isGridView ? 'grid grid-cols-1 content-start gap-6 sm:grid-cols-2 lg:grid-cols-3' : ''}`}
+        ref={containerRef}
+      >
         <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
-          <SortableContext items={pageIds} strategy={verticalListSortingStrategy}>
+          <SortableContext items={pageIds} strategy={rectSortingStrategy}>
             {pageIds.map((id) => {
               const pageNumber = parseInt(id.replace('page-', ''), 10);
 
@@ -222,7 +247,7 @@ export function PdfViewer({ file, onFileUpdate, onClose }: PdfViewerProps) {
                   <PdfPage
                     pdfDocument={pdfDocument}
                     pageNumber={pageNumber}
-                    scale={scale}
+                    scale={isGridView ? scale / 3 : scale}
                     onDelete={() => handleDeletePage(pageNumber)}
                     onRotate={() => handleRotatePage(pageNumber)}
                     onMoveUp={() => handleMoveUp(pageNumber)}

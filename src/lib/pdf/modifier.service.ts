@@ -1,4 +1,4 @@
-import { PDFDocument, degrees } from 'pdf-lib';
+import { PDFDocument, degrees, rgb, StandardFonts } from 'pdf-lib';
 
 /**
  * Supprime une page d'un fichier PDF et retourne le nouveau fichier.
@@ -132,6 +132,41 @@ export async function insertBlankPageAfter(originalFile: File, pageIndex: number
 
   const pdfBytes = await pdfDoc.save();
 
+  return new File([pdfBytes as BlobPart], originalFile.name, {
+    type: 'application/pdf',
+  });
+}
+
+export async function addWatermarkToPdf(originalFile: File, text: string): Promise<File> {
+  const arrayBuffer = await originalFile.arrayBuffer();
+  const pdfDoc = await PDFDocument.load(arrayBuffer);
+
+  // On intègre la police Helvetica pour pouvoir calculer les dimensions
+  const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const fontSize = 60;
+
+  // On calcule la taille du texte pour le centrer parfaitement
+  const textWidth = helveticaFont.widthOfTextAtSize(text, fontSize);
+  const textHeight = helveticaFont.heightAtSize(fontSize);
+
+  const pages = pdfDoc.getPages();
+
+  // On boucle sur chaque page du document
+  pages.forEach((page) => {
+    const { width, height } = page.getSize();
+
+    page.drawText(text, {
+      x: width / 2 - textWidth / 2,
+      y: height / 2 - textHeight / 2,
+      size: fontSize,
+      font: helveticaFont,
+      color: rgb(0.8, 0.2, 0.2), // Rouge
+      opacity: 0.3, // 30% d'opacité pour l'effet filigrane
+      rotate: degrees(45), // Diagonale
+    });
+  });
+
+  const pdfBytes = await pdfDoc.save();
   return new File([pdfBytes as BlobPart], originalFile.name, {
     type: 'application/pdf',
   });
